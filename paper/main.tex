@@ -655,46 +655,14 @@ that cannot be resolved by increasing $T$ alone.
 \subsection{Robustness: Raw Returns vs.\ Factor-Neutral Baseline}
 \label{sec:factorcontam}
 
-Our baseline results use factor-neutral returns throughout. Here we verify
-that the preprocessing choice does not drive the negative result by comparing
-raw-return TE with our baseline.
-
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{figure5_factor_neutral.png}
-  \caption{Raw TE vs.\ factor-neutral TE time series ($N=100$, $T=60$).
-           Raw TE spikes sharply during COVID-19 (March 2020) and the
-           2022 rate-hiking cycle, reflecting common-factor amplification
-           of all pairwise correlations during stress. Factor-neutral TE
-           is substantially smoother. Using raw TE as a baseline would
-           erroneously attribute these common-factor spikes to directed
-           firm-to-firm information flow.}
-  \label{fig:factorneutral}
-\end{figure}
-
-The raw TE series exhibits pronounced spikes during the COVID-19 crash
-(March 2020) and the 2022 rate-hiking cycle, while the factor-neutral series
-is substantially smoother. This confirms that raw TE captures common factor
-co-movement: two stocks loading on the same factors will exhibit mechanically
-high TE even absent any genuine firm-specific information flow.
-
-Importantly, the cross-sectional signal failure documented in
-Sections~\ref{sec:nio} and \ref{sec:sweep} holds under \emph{both}
-specifications. The NIO portfolio sort is insignificant whether we use raw or
-factor-neutral returns. The factor-neutral baseline is preferred on
-methodological grounds --- it measures idiosyncratic-to-idiosyncratic
-predictability, the economically relevant object --- but the negative result
-does not depend on this choice.
-
-This finding has a direct implication for the existing literature: all seven
-papers in Table~\ref{tab:literature} compute TE on raw returns without factor
-controls, facing an additional source of noise beyond the $T/N$ problem.
-Their TE networks conflate common factor co-movement and genuine directed
-information flow, making hub detection and centrality rankings even less
-reliable than our simulation (which uses factor-free DGPs) would suggest.
+Raw TE exhibits pronounced spikes during COVID-19 and the 2022 rate-hiking
+cycle; factor-neutral TE is substantially smoother (Figure~\ref{fig:factorneutral},
+Appendix). The cross-sectional NIO failure holds under both specifications.
+All seven papers in Table~\ref{tab:literature} compute TE on raw returns,
+facing this additional contamination beyond the $T/N$ problem.
 
 \subsection{LASSO Density Audit}
+\label{sec:lasso_density}
 
 \begin{figure}[H]
   \centering
@@ -706,32 +674,9 @@ reliable than our simulation (which uses factor-free DGPs) would suggest.
   \label{fig:density}
 \end{figure}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.88\textwidth]{figure2_te_distribution.png}
-  \caption{Distribution of mean factor-neutral TE values ($N=100$, $T=60$).
-           Values cluster near $10^{-6}$, consistent with the simulation
-           finding that individual pairwise estimates are dominated by
-           noise at $T/N = 0.6$.}
-  \label{fig:dist}
-\end{figure}
-
-\begin{table}[H]
-  \centering
-  \caption{Factor-Neutral LASSO-TE Network Statistics ($N=100$)}
-  \label{tab:lasso_stats}
-  \small
-  \begin{tabular}{rrrrc}
-    \toprule
-    Window $T$ & $T/N$ & Connected (\%) & Mean Density & Obs. \\
-    \midrule
-    60  & 0.60 & 27.1 & 0.0021 & 20{,}949 \\
-    120 & 1.20 & 32.5 & 0.0096 & 20{,}566 \\
-    180 & 1.80 & 24.1 & 0.0068 & 19{,}836 \\
-    252 & 2.52 & 23.1 & 0.0049 & 19{,}260 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+LASSO-TE network density averages 0.2\% at $T=60$ ($T/N=0.6$), rising to
+1.0\% at $T=120$, confirming near-empty networks across all window sizes.
+Only 27--33\% of rolling windows produce any connected nodes.
 
 \subsection{Cross-Sectional NIO Signal}
 \label{sec:nio}
