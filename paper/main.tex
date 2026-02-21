@@ -17,7 +17,7 @@
 \usepackage{array}
 \usepackage{multirow}
 
-\onehalfspacing
+\singlespacing  % Changed from \onehalfspacing to save space
 
 \hypersetup{
   colorlinks=true,
@@ -33,7 +33,7 @@
 % ============================================================
 \title{\textbf{Do Financial Transfer Entropy Networks Recover\\
 Meaningful Structure? A Matched-DGP Audit\\
-of Node-Level Estimation Reliability}\\[0.5em]
+of Node-Level Estimation Reliability}\\[0.3em]
 \large Working Paper}
 
 \author{Haotian Yang\thanks{Bocconi University. Email: \texttt{sorayoung.42@outlook.com}. Replication code: \url{https://github.com/sora42y/te-network-research-final}}}
@@ -47,22 +47,21 @@ of Node-Level Estimation Reliability}\\[0.5em]
 % Abstract
 % ============================================================
 \begin{abstract}
-Financial network papers often claim to identify systemically important nodes
+\noindent Financial network papers claim to identify systemically important nodes
 using transfer entropy (TE), typically with $T/N < 5$. We ask: can these
 methods recover network structure reliably?
 
 At $T/N < 5$, OLS-based TE recovers under 17\% of true edges; hub detection
-performs close to random. LASSO achieves higher precision but produces
-near-empty networks (density $<1\%$) on S\&P 500 data. Aggregate trends
-partially survive: crisis-period density spikes appear in all Monte Carlo
-trials, though magnitudes are attenuated. Node-level topology does not.
+is close to random. LASSO achieves higher precision but produces near-empty
+networks (density $<1\%$) on S\&P 500 data. Aggregate trends partially
+survive: crisis-period density spikes appear in all Monte Carlo trials,
+though magnitudes are attenuated. Node-level topology does not.
 
-We also run a power analysis: embed a known 10\% annualized network premium
-in simulated data and check if estimation can recover it. The oracle
-$t$-statistic (using true network) is 5.74; estimated $t$-statistics at
-$T/N=5$ average 0.74. Even with extreme premia ($>30\%$ annualized),
-signals barely emerge. Estimation noise alone is enough to destroy
-realistic network-return channels.
+We run a power analysis: embed a known 10\% annualized network premium in
+simulated data. The oracle $t$-statistic (true network) is 5.74; estimated
+$t$-statistics at $T/N=5$ average 0.74. Even with 30\%+ annualized premia,
+signals barely emerge. Estimation noise alone destroys realistic
+network-return channels.
 
 The $T/N$ barrier binds. Node-level claims in most existing work are
 unreliable; aggregate trends may be defensible.
@@ -71,7 +70,7 @@ unreliable; aggregate trends may be defensible.
 financial networks, estimation reliability, hub detection, LASSO-VAR,
 $T/N$ barrier.
 
-\medskip\noindent\textbf{JEL Classification:} G12, G14, C55, C58.\medskip\noindent\textbf{JEL Classification:} G12, G14, C55, C58.
+\medskip\noindent\textbf{JEL Classification:} G12, G14, C55, C58.
 \end{abstract}
 
 \newpage
