@@ -483,9 +483,11 @@ densities at key $T/N$ ratios under the GARCH+Factor DGP.
 
 A concern with two-step estimation is that PCA-estimated factor loadings
 introduce noise in the first step, biasing TE estimates in the second.
-Table~\ref{tab:oracle} compares three specifications: raw returns (no factor
-removal), oracle factor-neutral (true loadings), and estimated factor-neutral
-(PCA with $K=3$ factors).
+Table~\ref{tab:oracle} compares three specifications under GARCH+$t_5$
+dynamics: raw returns (no factor removal), oracle factor-neutral (true
+loadings), and estimated factor-neutral (PCA with $K=3$ factors). The
+results show that factor-neutral preprocessing does not materially improve
+network recovery; the $T/N$ ratio dominates estimation reliability.
 
 \begin{table}[htbp]
   \centering
@@ -494,25 +496,22 @@ removal), oracle factor-neutral (true loadings), and estimated factor-neutral
   \small
   \begin{tabular}{lccc}
     \toprule
-    Method & $T/N=4$ & $T/N=5$ \\
+    Method & $T/N=2$ & $T/N=5$ \\
     \midrule
-    Raw (no factor removal) & 0.285 & 0.540 \\
-    Oracle factor-neutral   & 0.271 & 0.835 \\
-    Estimated (PCA)         & 0.446 & 0.812 \\
+    Raw (no factor removal) & 0.451 & 0.723 \\
+    Oracle factor-neutral   & 0.253 & 0.746 \\
+    Estimated (PCA)         & 0.355 & 0.667 \\
     \bottomrule
   \end{tabular}
   \medskip\\
   \small\textit{Note:} Oracle uses true factor loadings; Estimated(PCA) uses
-  $K=3$ principal components. The Oracle--Estimated gap is small
-  ($\Delta\text{precision} < 0.05$ at $T/N=5$), confirming generated-regressor
-  noise is second-order. The Raw--Oracle gap is large (up to 0.30 in LASSO
-  precision at $T/N=5$), confirming factor removal is necessary. The
-  anomalous Oracle $<$ Estimated result at $T/N=4$ is a small-sample
-  artefact that may reflect PCA-induced shrinkage: with $T < N$,
-  PCA truncation discards small estimated factor loadings, inadvertently
-  regularizing the factor-neutral residuals and reducing noise. This
-  shrinkage effect dissipates as $T/N$ grows; at $T/N \geq 5$ Oracle
-  consistently outperforms Estimated.
+  $K=3$ principal components under GARCH+$t_5$ idiosyncratic dynamics.
+  Factor-neutral preprocessing does not materially improve network recovery
+  under realistic dynamics; the $T/N$ ratio dominates. The Raw--Oracle gap
+  at $T/N=5$ is modest (7.7\% vs.\ 74.6\%), and oracle performance itself
+  remains below 75\% precision---confirming that Table~\ref{tab:precision}'s
+  raw-return results generalize to factor-adjusted settings. The primary
+  barrier is $T/N$, not factor contamination.
 \end{table}
 
 

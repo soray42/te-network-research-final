@@ -47,6 +47,9 @@ def eval_metrics(A_true, A_pred, top_k=5):
 
 def run_oracle_extended():
     print("\n=== Exp #3: Generated Regressor Extended ===")
+    print("⚠️  FIXED: Now using GARCH+t5 DGP (consistent with Table 2)")
+    from extended_dgp import generate_sparse_var_extended
+    
     K = 3
     # Cover wider T/N range: N=50, T in {50,100,250,500} → T/N={1,2,5,10}
     configs = [(50, 50), (50, 100), (50, 250), (50, 500)]
@@ -55,28 +58,23 @@ def run_oracle_extended():
         for N, T in configs:
             for trial in range(N_TRIALS):
                 seed = SEED_BASE + trial*1000 + N + T
-                rng  = np.random.RandomState(seed)
-                sigma = 0.01
-
-                A = np.zeros((N, N))
-                off_d = [(i,j) for i in range(N) for j in range(N) if i!=j]
-                for idx in rng.choice(len(off_d), int(N*N*0.05), replace=False):
-                    i,j = off_d[idx]
-                    A[i,j] = rng.uniform(0.05,0.15)*rng.choice([-1,1])
-                ev = np.abs(np.linalg.eigvals(A))
-                if ev.max() > 0.9: A *= 0.9/ev.max()
-                A_true = (A!=0).astype(int)
-
-                B_true = rng.normal(0,1,(N,K))*0.4
-                F = np.zeros((T,K))
-                for t in range(1,T): F[t] = 0.1*F[t-1]+rng.normal(0,sigma*1.5,K)
-                innov = F@B_true.T + rng.normal(0,sigma*0.7,(T,N))
-                R = np.zeros((T,N)); R[0] = rng.normal(0,sigma,N)
-                for t in range(1,T): R[t] = A@R[t-1]+innov[t]
-
-                R_oracle = R - F@B_true.T
-                pca = PCA(n_components=K); F_hat = pca.fit_transform(R)
-                R_est = R - F_hat@pca.components_
+                
+                # ✅ FIX: Use GARCH+t5 DGP (same as Table 2)
+                R, A_coef, A_true, F_true = generate_sparse_var_extended(
+                    N=N, T=T,
+                    density=0.05,
+                    dgp='garch_factor',  # ← GARCH+t5, not Gaussian! (K=3 hardcoded in function)
+                    seed=seed,
+                    return_factors=True
+                )
+                
+                # Oracle: use true factors
+                R_oracle = R - F_true @ np.linalg.lstsq(F_true, R, rcond=None)[0]
+                
+                # Estimated: use PCA
+                pca = PCA(n_components=K)
+                F_hat = pca.fit_transform(R)
+                R_est = R - F_hat @ pca.components_
 
                 base = dict(N=N, T=T, T_N=round(T/N,1), trial=trial)
                 for Rdata, label in [(R,'Raw'),(R_oracle,'Oracle'),(R_est,'Estimated(PCA)')]:

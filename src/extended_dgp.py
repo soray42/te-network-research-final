@@ -15,7 +15,7 @@ Usage:
 import numpy as np
 
 
-def generate_sparse_var_extended(N=50, T=500, density=0.05, seed=42, dgp='gaussian'):
+def generate_sparse_var_extended(N=50, T=500, density=0.05, seed=42, dgp='gaussian', return_factors=False):
     """
     Generate sparse VAR(1) data with realistic DGP options.
     
@@ -26,8 +26,19 @@ def generate_sparse_var_extended(N=50, T=500, density=0.05, seed=42, dgp='gaussi
         'garch'        : GARCH(1,1) innovations per stock, no cross-sectional correlation
         'garch_factor' : K common factors + GARCH(1,1) idiosyncratic innovations
                          + contemporaneous cross-sectional correlation via factor structure
+    return_factors : bool
+        If True and dgp='garch_factor', also return the true factor matrix F
     
-    Returns: R (T×N), A (N×N coefficient matrix), A_true (N×N binary adjacency)
+    Returns
+    -------
+    R : ndarray (T, N)
+        Return matrix
+    A : ndarray (N, N)
+        VAR coefficient matrix
+    A_true : ndarray (N, N)
+        Binary adjacency matrix
+    F : ndarray (T, K), optional
+        True factor matrix (only if return_factors=True and dgp='garch_factor')
     """
     rng = np.random.RandomState(seed)
     
@@ -118,7 +129,11 @@ def generate_sparse_var_extended(N=50, T=500, density=0.05, seed=42, dgp='gaussi
     for t in range(1, T):
         R[t] = A @ R[t-1] + innovations[t]
     
-    return R, A, A_true
+    # ---- Step 4: Return factors if requested ----
+    if return_factors and dgp == 'garch_factor':
+        return R, A, A_true, F
+    else:
+        return R, A, A_true
 
 
 def verify_dgp_properties(N=50, T=500, seed=42):
