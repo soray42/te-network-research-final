@@ -108,7 +108,7 @@ literature but report no Monte Carlo validation of the resulting connectedness
 rankings. The remaining papers report no simulation experiments at all.
 Table~\ref{tab:literature} summarises these estimation regimes.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Estimation Regimes and Matched-DGP Validation Gap}
   \label{tab:literature}
@@ -363,7 +363,7 @@ Table~\ref{tab:literature}:
         rescaled to spectral radius 0.9.
         These parameters are illustrative; density sensitivity
         (2\%--20\%) and other robustness checks are reported in
-        Appendix~\ref{app:robustness}.
+        the appendix.
   \item $\sigma_{i,t}^2 = \omega_i + \alpha_i u_{i,t-1}^2 + \beta_i
         \sigma_{i,t-1}^2$: GARCH(1,1) with $\alpha_i \sim \mathcal{U}(0.05,
         0.10)$ and $\beta_i \sim \mathcal{U}(0.85, 0.90)$.
@@ -381,7 +381,7 @@ and $(N, T)$ combinations spanning the range of published financial network
 studies. Figure~\ref{fig:sim} plots the results for the \texttt{garch\_factor}
 DGP, the most realistic specification.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figure3_simulation.png}
   \caption{Network recovery under the \texttt{garch\_factor} DGP
@@ -394,7 +394,7 @@ DGP, the most realistic specification.
   \label{fig:sim}
 \end{figure}
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Network Recovery Quality: GARCH+Factor DGP (100 Monte Carlo trials per cell)}
   \label{tab:main_results}
@@ -457,7 +457,7 @@ those used in published work.}
 Table~\ref{tab:density} reports OLS-TE precision across four true network
 densities at key $T/N$ ratios under the GARCH+Factor DGP.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{OLS-TE Precision by True Network Density (GARCH+Factor DGP)}
   \label{tab:density}
@@ -488,7 +488,7 @@ Table~\ref{tab:oracle} compares three specifications: raw returns (no factor
 removal), oracle factor-neutral (true loadings), and estimated factor-neutral
 (PCA with $K=3$ factors).
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Oracle vs.\ Estimated Factor-Neutral: LASSO-TE Precision}
   \label{tab:oracle}
@@ -521,7 +521,7 @@ removal), oracle factor-neutral (true loadings), and estimated factor-neutral
 dynamics (threshold-VAR), lag misspecification (VAR(2) estimated with lag-1),
 and regularization family (Elastic Net $\alpha \in [0.1, 1.0]$). The $T/N$
 barrier persists or worsens under all variations. No convex penalization
-achieves F1 $> 0.55$ at $T/N \leq 5$ (Appendix~\ref{app:robustness}).
+achieves F1 $> 0.55$ at $T/N \leq 5$ (the appendix).
 
 
 \subsection{Mechanism Decomposition: GARCH vs.\ Common Factors}
@@ -531,7 +531,7 @@ Table~\ref{tab:mechanism} decomposes the OLS-TE precision failure
 across four DGPs, isolating the contribution of GARCH dynamics
 and common factor structure.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{OLS-TE Precision by DGP: Mechanism Decomposition}
   \label{tab:mechanism}
@@ -560,7 +560,7 @@ and common factor structure.
   finite-sample factor loading estimation does not resolve this contamination.
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figure_mechanism.png}
   \caption{OLS-TE precision vs.\ $T/N$ by DGP.
@@ -599,7 +599,7 @@ that cannot be resolved by increasing $T$ alone.
 \label{sec:factorcontam}
 
 Raw TE exhibits pronounced spikes during COVID-19 and the 2022 rate-hiking
-cycle; factor-neutral TE is substantially smoother (Figure~\ref{fig:factorneutral},
+cycle; factor-neutral TE is substantially smoother (Figure~A1,
 Appendix). The cross-sectional NIO failure holds under both specifications.
 All seven papers in Table~\ref{tab:literature} compute TE on raw returns,
 facing this additional contamination beyond the $T/N$ problem.
@@ -607,7 +607,7 @@ facing this additional contamination beyond the $T/N$ problem.
 \subsection{LASSO Density Audit}
 \label{sec:lasso_density}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figure4_density_comparison.png}
   \caption{Network density: OLS-TE with 75th-percentile threshold
@@ -624,7 +624,7 @@ Only 27--33\% of rolling windows produce any connected nodes.
 \subsection{Cross-Sectional NIO Signal}
 \label{sec:nio}
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Portfolio Sort: Factor-Neutral OLS-TE NIO
            ($N \approx 100$, $T = 60$)}
@@ -688,7 +688,7 @@ of mean returns on NIO:
 Table~\ref{tab:oracle_nio} reports results across five premium levels and
 three $T/N$ ratios (50 trials per cell).
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Power Analysis: NIO Signal Degradation Under Estimation Noise}
   \label{tab:oracle_nio}
@@ -734,7 +734,7 @@ at typical financial $T/N$ ratios. The empirical NIO failure
 \subsection{The T/N Barrier}
 \label{sec:sweep}
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Binary Split $t$-statistics: Connected vs.\ Isolated Stocks}
   \label{tab:sweep_grid}
@@ -759,7 +759,7 @@ at typical financial $T/N$ ratios. The empirical NIO failure
   No cell exceeds $|t| = 2.09$; none is robust across window sizes.
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.88\textwidth]{figure6_TN_barrier.png}
   \caption{$t$-statistic of NIO signal as a function of $T/N$.
@@ -824,7 +824,6 @@ approaches this threshold.
 
 \subsection{Aggregate Connectedness Recovery}
 \label{sec:aggregate_recovery}
-\subsection{Aggregate Connectedness Recovery}
 
 A central claim in \citet{billio2012} is that \emph{aggregate} network
 connectedness tracks systemic risk. We test this: simulate $N=50$, $T=500$
@@ -846,7 +845,7 @@ stress-period connectivity increases even when individual edges fail.
 We test whether TE recovers a designated hub sector: assign 5 hub nodes
 out-edge density 30\% (hub→rest) vs.\ 5\% background ($N=50$, $T=500$).
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Hub Sector Detection ($N_{\text{hub}}=5$, $N=50$, $T=500$, 100 trials)}
   \label{tab:hub_billio}
@@ -937,7 +936,7 @@ entropy, $k=3$ nearest neighbors) and compared it to LASSO under the same
 GARCH+Factor DGP. Table~\ref{tab:nonparametric_te} and
 Figure~\ref{fig:nonparametric_te} show the results.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Nonparametric vs Linear TE: Precision Comparison (GARCH+Factor DGP)}
   \label{tab:nonparametric_te}
@@ -963,7 +962,7 @@ Figure~\ref{fig:nonparametric_te} show the results.
   curse; linear methods are the only feasible approach. Mean $\pm$ std, 50 trials.
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.85\textwidth]{figure_nonparametric_te.png}
   \caption{Nonparametric vs Linear TE precision. KNN achieves 6--13\% across
@@ -987,7 +986,7 @@ edge-level precision and random-selection baseline. The random baseline
 gives the expected overlap between two randomly drawn sets of 5 nodes
 from a universe of $N$ stocks.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Hub Recovery Rate (top-5, GARCH+Factor DGP)}
   \label{tab:hub_recovery}
@@ -1030,7 +1029,7 @@ from a universe of $N$ stocks.
 Table~\ref{tab:horizon} reports binary-split $t$-statistics for the NIO
 signal across holding periods of 1, 5, and 21 days.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{NIO Signal: Horizon Robustness}
   \label{tab:horizon}
@@ -1066,7 +1065,7 @@ Strategy 2 of Section~\ref{sec:discussion} proposes sector-level aggregation
 as a path to reliable network estimation. Table~\ref{tab:sector} validates
 this empirically using real equity data.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Sector Aggregation: T/N and LASSO Network Density}
   \label{tab:sector}
@@ -1095,7 +1094,7 @@ this empirically using real equity data.
 Table~\ref{tab:altsig} shows that NIO, weighted out-degree (WOD), and
 PageRank all fail to identify hubs reliably at $T/N \leq 5$.
 
-\begin{table}[H]
+\begin{table}[htbp]
   \centering
   \caption{Hub Recovery by Signal Construction (LASSO-TE, GARCH+Factor)}
   \label{tab:altsig}
