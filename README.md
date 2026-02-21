@@ -1,7 +1,13 @@
 # Do Financial Transfer Entropy Networks Recover Meaningful Structure?
 ## A Matched-DGP Audit of Node-Level Estimation Reliability
 
+**Haotian Yang**  
+Bocconi University  
+📧 sorayoung.42@outlook.com
+
 **Final Replication Package**
+
+🔗 **GitHub**: https://github.com/sora42y/te-network-research-final
 
 This repository contains the complete replication materials for the paper.
 
@@ -57,7 +63,17 @@ python generate_nonparametric_figure.py
 
 ## Citation
 
-[To be added]
+If you use this code or data in your research, please cite:
+
+```bibtex
+@article{yang2026te,
+  title={Do Financial Transfer Entropy Networks Recover Meaningful Structure? A Matched-DGP Audit of Node-Level Estimation Reliability},
+  author={Yang, Haotian},
+  institution={Bocconi University},
+  year={2026},
+  note={Working Paper}
+}
+```
 
 ## License
 
@@ -65,4 +81,7 @@ MIT License
 
 ## Contact
 
-[Author contact]
+**Haotian Yang**  
+Bocconi University  
+📧 sorayoung.42@outlook.com  
+🔗 https://github.com/sora42y/te-network-research-final
