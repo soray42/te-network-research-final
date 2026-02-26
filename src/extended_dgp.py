@@ -21,6 +21,10 @@ def generate_sparse_var_extended(N=50, T=500, density=0.05, seed=42, dgp='gaussi
     
     Parameters
     ----------
+    density : float
+        Network density. NOTE (P2-11): This is defined as n_edges / N^2,
+        where n_edges includes diagonal elements. For off-diagonal density,
+        use n_edges / (N*(N-1)). Current implementation uses N^2 convention.
     dgp : str
         'gaussian'     : i.i.d. N(0, σ²I) innovations (original baseline)
         'garch'        : GARCH(1,1) innovations per stock, no cross-sectional correlation

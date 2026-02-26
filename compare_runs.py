@@ -203,10 +203,10 @@ def main():
             print("UNSTABLE: CV >= 5% - results vary significantly across seeds")
     print("\n" + "="*80)
     
-    # Calculate differences (if numeric)
-    if len(df) >= 2 and 'Avg Precision' in df.columns:
+    # P2-10 FIX: Check actual column names (Precision, not "Avg Precision")
+    if len(df) >= 2 and 'Precision' in df.columns:
         try:
-            precisions = [float(x) for x in df['Avg Precision'] if x != 'N/A']
+            precisions = [float(x) for x in df['Precision'] if x != 'N/A']
             if len(precisions) >= 2:
                 max_diff = max(precisions) - min(precisions)
                 cv = (pd.Series(precisions).std() / pd.Series(precisions).mean()) * 100
