@@ -9,8 +9,9 @@ import argparse
 from pathlib import Path
 import sys
 
-# Add src to path
+# Add src and scripts to path
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
+sys.path.insert(0, str(Path(__file__).parent / 'scripts'))
 
 from results_manager import ResultsManager
 
