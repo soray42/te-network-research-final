@@ -20,10 +20,22 @@ def run_table2(mgr, args):
     print("Running Table 2: Main Simulation Results (GARCH+Factor DGP)")
     print("="*60)
     
-    from run_factor_neutral_sim import main as run_sim
+    import subprocess
+    import sys
     
-    # Run experiment
-    run_sim(trials=args.trials, seed_base=args.seed_base)
+    # Run as subprocess to avoid import issues
+    result = subprocess.run(
+        [sys.executable, 'src/run_factor_neutral_sim.py', '--trials', str(args.trials)],
+        cwd=Path(__file__).parent,
+        capture_output=True,
+        text=True
+    )
+    
+    if result.returncode != 0:
+        print("ERROR:", result.stderr)
+        return
+    
+    print(result.stdout)
     
     # Copy results to versioned directory
     result_files = [
@@ -43,9 +55,21 @@ def run_table4(mgr, args):
     print("Running Table 4: Oracle vs Estimated Factor-Neutral")
     print("="*60)
     
-    from all_experiments_v2 import run_oracle_vs_estimated
+    import subprocess
+    import sys
     
-    run_oracle_vs_estimated()
+    result = subprocess.run(
+        [sys.executable, 'src/all_experiments_v2.py', '--trials', str(args.trials), '--experiments', '3'],
+        cwd=Path(__file__).parent,
+        capture_output=True,
+        text=True
+    )
+    
+    if result.returncode != 0:
+        print("ERROR:", result.stderr)
+        return
+    
+    print(result.stdout)
     
     result_file = 'results/oracle_vs_estimated.csv'
     if Path(result_file).exists():
@@ -57,9 +81,21 @@ def run_table5(mgr, args):
     print("Running Table 5: Empirical Portfolio Sort (NIO)")
     print("="*60)
     
-    from empirical_portfolio_sort import main as run_sort
+    import subprocess
+    import sys
     
-    run_sort()
+    result = subprocess.run(
+        [sys.executable, 'src/empirical_portfolio_sort.py'],
+        cwd=Path(__file__).parent,
+        capture_output=True,
+        text=True
+    )
+    
+    if result.returncode != 0:
+        print("ERROR:", result.stderr)
+        return
+    
+    print(result.stdout)
     
     result_files = [
         'results/table5_portfolio_sort.csv',
@@ -76,9 +112,21 @@ def run_table6(mgr, args):
     print("Running Table 6: Oracle NIO Power Analysis")
     print("="*60)
     
-    from oracle_nio_power import main as run_power
+    import subprocess
+    import sys
     
-    run_power(trials=args.trials)
+    result = subprocess.run(
+        [sys.executable, 'src/oracle_nio_power.py', '--trials', str(args.trials)],
+        cwd=Path(__file__).parent,
+        capture_output=True,
+        text=True
+    )
+    
+    if result.returncode != 0:
+        print("ERROR:", result.stderr)
+        return
+    
+    print(result.stdout)
     
     result_files = [
         'results/table6_oracle_nio_power.csv',
