@@ -10,6 +10,7 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 import subprocess
+from experiment_metadata import ExperimentMetadata
 
 class ResultsManager:
     """
