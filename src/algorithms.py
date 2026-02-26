@@ -150,8 +150,14 @@ def _compute_lasso_te_matrix(R):
         X_resid = X_others - X_res_with_const @ beta_X
         
         # Fit LASSO (P0 FIX: removed normalize=False for sklearn >= 1.2)
+        # BUG FIX: When T < N, LassoLarsIC cannot estimate noise variance
+        # Provide a simple estimate based on residuals
         try:
-            lasso = LassoLarsIC(criterion='bic', max_iter=1000)
+            # Estimate noise variance from marginal fit
+            y_mean = np.mean(y_resid)
+            noise_var_est = np.var(y_resid) if len(y_resid) > 1 else 1e-6
+            
+            lasso = LassoLarsIC(criterion='bic', max_iter=1000, noise_variance=noise_var_est)
             lasso.fit(X_resid, y_resid)
             coef = lasso.coef_
             
@@ -175,8 +181,9 @@ def _compute_lasso_te_matrix(R):
                         TE_matrix[i, j] = 0.5 * np.log(sigma2_res / sigma2_full)
         except (ValueError, TypeError, np.linalg.LinAlgError) as e:
             # P1 FIX: Catch specific exceptions instead of bare except
+            # Bug fix: 'j' not defined in outer scope when fit() fails early
             import warnings
-            warnings.warn(f"LASSO fitting failed for edge {i}->{j}: {e}")
+            warnings.warn(f"LASSO fitting failed for asset {i}: {e}")
     
     return TE_matrix, A_binary
 

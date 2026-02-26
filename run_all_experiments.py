@@ -176,15 +176,27 @@ def main():
     
     print(f"\nTotal runtime: {total_time/60:.1f} minutes")
     
+    # Always show where results are saved (even if some failed)
+    print(f"\n📁 Results directory: {RESULTS_DIR.resolve()}")
+    print("\n   Output files:")
+    if (RESULTS_DIR / "table2_main.csv").exists():
+        print(f"   - Table 2: {RESULTS_DIR / 'table2_main.csv'}")
+    if (RESULTS_DIR / "table4_oracle_vs_estimated.csv").exists():
+        print(f"   - Table 4: {RESULTS_DIR / 'table4_oracle_vs_estimated.csv'}")
+    if (RESULTS_DIR / "table5_portfolio_sort.txt").exists():
+        print(f"   - Table 5: {RESULTS_DIR / 'table5_portfolio_sort.txt'}")
+    if (RESULTS_DIR / "table6_oracle_nio_power.txt").exists():
+        print(f"   - Table 6: {RESULTS_DIR / 'table6_oracle_nio_power.txt'}")
+    
     if all(results.values()):
         print("\n🎉 All experiments completed successfully!")
-        print(f"\nResults saved to: {RESULTS_DIR}")
         print("\nNext steps:")
-        print("  1. Check results/*.csv for numerical output")
+        print("  1. Review results/*.csv for numerical output")
         print("  2. Check paper_assets/*.png for figures")
         print("  3. Compile paper: cd paper && pdflatex main.tex")
     else:
         print("\n⚠️  Some experiments failed. Check logs above.")
+        print("   Successful experiments still have valid output files.")
         sys.exit(1)
 
 if __name__ == "__main__":
