@@ -35,13 +35,19 @@ print(df[['N', 'T', 'T/N', 'method', 'precision_mean']])
 methods = ['LASSO', 'KNN']  # Remove OLS (NaN at low T/N)
 tn_labels = ['0.6', '2.5', '5.0']
 
-# Group by approximate T/N
+# Group by approximate T/N and aggregate properly
 grouped = []
 for tn_target in [0.6, 2.5, 5.0]:
     subset = df[(df['T/N'] >= tn_target - 0.1) & (df['T/N'] <= tn_target + 0.1)]
-    # Take first N,T config for each T/N bucket (they might have multiple N,T pairs)
+    # FIX: Use mean aggregation instead of first() to avoid random sampling
     if len(subset) > 0:
-        tn_group = subset.groupby('method').first().reset_index()
+        tn_group = subset.groupby('method').agg({
+            'precision_mean': 'mean',
+            'precision_std': 'mean',
+            'T/N': 'mean',
+            'N': 'first',  # Just for reference
+            'T': 'first'   # Just for reference
+        }).reset_index()
         tn_group['T/N_label'] = f'{tn_target:.1f}'
         grouped.append(tn_group)
 

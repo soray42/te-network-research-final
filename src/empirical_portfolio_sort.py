@@ -189,8 +189,29 @@ def main():
     print("Empirical Portfolio Sort Analysis")
     print("="*80)
     
-    # Load data
+    # Load data with SHA256 verification (P0-1 FIX)
     print(f"\nLoading data from: {DATA_FILE}")
+    
+    # Compute SHA256 for verification
+    import hashlib
+    sha256 = hashlib.sha256()
+    with open(DATA_FILE, 'rb') as f:
+        for chunk in iter(lambda: f.read(8192), b''):
+            sha256.update(chunk)
+    data_sha256 = sha256.hexdigest()
+    
+    # Expected SHA256 (from MANIFEST.md)
+    EXPECTED_SHA256 = "87544851c75673c0cc99823953ce90d917210a5312d7342dab83f8795d380056"
+    
+    print(f"Data SHA256: {data_sha256}")
+    if data_sha256.lower() != EXPECTED_SHA256.lower():
+        print(f"WARNING: Data checksum mismatch!")
+        print(f"Expected: {EXPECTED_SHA256}")
+        print(f"Got:      {data_sha256}")
+        print("Results may not match published paper. Continuing anyway...")
+    else:
+        print("Data integrity verified (SHA256 match)")
+    
     df = pd.read_csv(DATA_FILE, parse_dates=["formation_date"])
     
     print(f"Total observations: {len(df):,}")
@@ -255,20 +276,24 @@ def main():
     results_sub1 = pd.DataFrame(results_sub1)
     results_sub2 = pd.DataFrame(results_sub2)
     
-    # Compute long-short t-stats
-    q5_rets_full = ps_full[ps_full['quintile'] == 5]['ret'].values
-    q1_rets_full = ps_full[ps_full['quintile'] == 1]['ret'].values
-    ls_full = q5_rets_full - q1_rets_full
+    # Compute long-short t-stats (FIX: align by date to avoid silent misalignment)
+    # Get Q5 and Q1 returns with dates
+    q5_full = ps_full[ps_full['quintile'] == 5][['formation_date', 'ret']].rename(columns={'ret': 'q5_ret'})
+    q1_full = ps_full[ps_full['quintile'] == 1][['formation_date', 'ret']].rename(columns={'ret': 'q1_ret'})
+    ls_full_df = q5_full.merge(q1_full, on='formation_date', how='inner')
+    ls_full = ls_full_df['q5_ret'] - ls_full_df['q1_ret']
     ls_full_t = ls_full.mean() / (ls_full.std() / np.sqrt(len(ls_full)))
     
-    q5_rets_sub1 = ps_sub1[ps_sub1['quintile'] == 5]['ret'].values
-    q1_rets_sub1 = ps_sub1[ps_sub1['quintile'] == 1]['ret'].values
-    ls_sub1 = q5_rets_sub1 - q1_rets_sub1
+    q5_sub1 = ps_sub1[ps_sub1['quintile'] == 5][['formation_date', 'ret']].rename(columns={'ret': 'q5_ret'})
+    q1_sub1 = ps_sub1[ps_sub1['quintile'] == 1][['formation_date', 'ret']].rename(columns={'ret': 'q1_ret'})
+    ls_sub1_df = q5_sub1.merge(q1_sub1, on='formation_date', how='inner')
+    ls_sub1 = ls_sub1_df['q5_ret'] - ls_sub1_df['q1_ret']
     ls_sub1_t = ls_sub1.mean() / (ls_sub1.std() / np.sqrt(len(ls_sub1)))
     
-    q5_rets_sub2 = ps_sub2[ps_sub2['quintile'] == 5]['ret'].values
-    q1_rets_sub2 = ps_sub2[ps_sub2['quintile'] == 1]['ret'].values
-    ls_sub2 = q5_rets_sub2 - q1_rets_sub2
+    q5_sub2 = ps_sub2[ps_sub2['quintile'] == 5][['formation_date', 'ret']].rename(columns={'ret': 'q5_ret'})
+    q1_sub2 = ps_sub2[ps_sub2['quintile'] == 1][['formation_date', 'ret']].rename(columns={'ret': 'q1_ret'})
+    ls_sub2_df = q5_sub2.merge(q1_sub2, on='formation_date', how='inner')
+    ls_sub2 = ls_sub2_df['q5_ret'] - ls_sub2_df['q1_ret']
     ls_sub2_t = ls_sub2.mean() / (ls_sub2.std() / np.sqrt(len(ls_sub2)))
     
     # Package results

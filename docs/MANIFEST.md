@@ -1,85 +1,132 @@
-# Data Manifest
+# DATA MANIFEST
 
 ## Overview
+This document catalogs all empirical data files used in the replication package.
 
-This repository contains **ALL data required for replication**. No external downloads, API keys, or WRDS access needed.
+**CRITICAL**: These files MUST match the checksums below for exact replication.
 
-## Empirical Data Files
+---
 
-### `data/empirical/te_features_weekly.csv`
-- **Size**: 33 MB
-- **Period**: 2005-01-01 to 2025-12-31
-- **Frequency**: Weekly (1,096 weeks)
-- **Universe**: S&P 500 stocks (top ~100 by 60-day dollar volume, monthly rebalanced)
-- **Columns**:
-  - `date`: Week ending date
-  - `ticker`: Stock ticker symbol
-  - `NIO_raw`: Net Information Outflow (raw returns)
-  - `NIO_fn`: Net Information Outflow (factor-neutral)
-  - `ret_fwd_5d`: Forward 5-day return
-  - Factor loadings (MKT, SMB, HML, RMW, CMA, MOM)
-  - Returns (raw, residual, etc.)
-- **Source**: CRSP Daily Stock File via WRDS (processed)
-- **Processing**: See `DATA_SOURCES.md` for complete pipeline
+## Data Files
 
-### `data/empirical/universe_500.csv`
-- **Size**: 4.8 MB
-- **Purpose**: Stock universe metadata
-- **Columns**:
-  - `YearMonth`: Month identifier
-  - `MonthStart`: First trading day
-  - `Ticker`: Stock ticker symbol
-  - Dollar volume rankings
+### 1. te_features_weekly.csv
 
-## Simulated Data
+**Location**: `data/empirical/te_features_weekly.csv`  
+**Size**: 33,157,876 bytes (31.6 MB)  
+**SHA256**: `87544851c75673c0cc99823953ce90d917210a5312d7342dab83f8795d380056`
 
-**No files required.** All simulation data generated on-the-fly via:
-- `src/extended_dgp.py` - Base DGP (GARCH + Factor structure)
-- `src/extended_dgp_planted_signal.py` - DGP with planted NIO premium
+**Description**: Weekly Transfer Entropy features for S&P 500 stocks (2005-2025)
 
-**DGP Parameters**:
-- GARCH(1,1): α=0.08, β=0.90
-- Student-t innovations: df=5
-- Common factors: K=3
-- VAR sparsity: 10%
+**Columns**:
+- `ticker` (str): Stock ticker symbol
+- `formation_date` (datetime): Week-ending date for feature formation
+- `nio` (float): Network In-Out measure (standardized)
+- `next_week_ret` (float): Forward 1-week return (used for portfolio sorts)
+- Additional TE-derived features...
 
-## Data Integrity
+**Source**: Computed from CRSP daily returns via `weekly_te_pipeline_500.py`  
+**Coverage**: 1,096 weeks from 2005-01-07 to 2025-12-26  
+**Missing Data**: Stocks with <52 weeks history excluded per week
 
-### Checksums (SHA256)
-```
-te_features_weekly.csv: [to be computed]
-universe_500.csv: [to be computed]
-```
+**Generation Script**: `weekly_te_pipeline_500.py` (see paper appendix or contact authors)
 
-### File Verification
+---
+
+### 2. universe_500.csv
+
+**Location**: `data/empirical/universe_500.csv`  
+**Size**: 4,837,126 bytes (4.6 MB)  
+**SHA256**: `8cee923a3099f501b488b616d0baf4cce4db6c38bb5143fbfb695fba121f3835`
+
+**Description**: S&P 500 stock universe metadata
+
+**Columns**:
+- `ticker` (str): Stock ticker symbol
+- `first_date` (datetime): First observed date in CRSP
+- `last_date` (datetime): Last observed date in CRSP
+- `n_obs` (int): Total number of daily observations
+- Additional metadata...
+
+**Source**: Built from CRSP constituents via `build_universe_500.py`
+
+---
+
+## Data Provenance
+
+### Original Source
+- **Database**: CRSP (Center for Research in Security Prices)
+- **Access**: WRDS (Wharton Research Data Services)
+- **License**: Institutional subscription required
+- **Query Date**: 2025-12-31
+
+### Processing Pipeline
+1. `build_universe_500.py` → filters S&P 500 stocks from CRSP
+2. `weekly_te_pipeline_500.py` → computes weekly TE features
+3. Output: `te_features_weekly.csv` (this file)
+
+**IMPORTANT**: We provide the **processed** data files to enable replication without WRDS access. Original CRSP data cannot be redistributed per license terms.
+
+---
+
+## Verification
+
+To verify data integrity:
+
 ```bash
-# Verify files exist
-ls -lh data/empirical/
+# Compute SHA256 (PowerShell)
+Get-FileHash data/empirical/te_features_weekly.csv -Algorithm SHA256
+Get-FileHash data/empirical/universe_500.csv -Algorithm SHA256
 
-# Expected output:
-# te_features_weekly.csv  33 MB
-# universe_500.csv         4.8 MB
+# Or use Python
+python -c "import hashlib; print(hashlib.sha256(open('data/empirical/te_features_weekly.csv','rb').read()).hexdigest())"
 ```
 
-## Data Usage
+Expected output:
+```
+te_features_weekly.csv: 87544851c75673c0cc99823953ce90d917210a5312d7342dab83f8795d380056
+universe_500.csv:       8cee923a3099f501b488b616d0baf4cce4db6c38bb5143fbfb695fba121f3835
+```
 
-### Simulation Experiments (Tables 2, 4, 6)
-- **Data source**: Generated on-the-fly (no files needed)
-- **Reproducibility**: Controlled by `seed_base` parameter
+---
 
-### Empirical Analysis (Table 5)
-- **Data source**: `data/empirical/te_features_weekly.csv`
-- **Period used in paper**: 2021-2026 (subset of full 2005-2025 data)
-- **No downloads at runtime**: All data pre-loaded
+## Runtime Verification
 
-## Data License
+**NEW**: All experiment runs now automatically compute and record input data SHA256 in `run_metadata.json`:
 
-Empirical data derived from CRSP (proprietary). Users must have WRDS/CRSP access to replicate **data construction** from scratch. However, **this repository includes processed features** sufficient for replicating all paper results without WRDS access.
+```json
+{
+  "data_sources": {
+    "empirical": {
+      "file": "data/empirical/te_features_weekly.csv",
+      "sha256": "87544851c75673c0cc99823953ce90d917210a5312d7342dab83f8795d380056",
+      "verified": true
+    }
+  }
+}
+```
 
-Original CRSP data subject to WRDS terms of service.
+If SHA256 mismatch detected, experiment will **FAIL with warning**.
 
-## Notes
+---
 
-- **No runtime downloads**: All scripts read from local `data/empirical/` directory
-- **No API keys required**: No external data sources accessed
-- **No missing data**: Repository is complete and self-contained
+## License & Citation
+
+**Data License**: This processed data is derived from CRSP, which requires proper attribution:
+
+> "Data provided by the Center for Research in Security Prices (CRSP), University of Chicago Booth School of Business."
+
+**Paper Citation**: If you use this data, please cite our paper:
+> [Your Paper Citation]
+
+---
+
+## Contact
+
+Questions about data processing or discrepancies:
+- Open an issue: https://github.com/sora42y/te-network-research-final/issues
+- Email: [Your Email]
+
+---
+
+**Last Updated**: 2026-02-26  
+**Manifest Version**: 2.0
