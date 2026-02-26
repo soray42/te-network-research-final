@@ -37,9 +37,9 @@ def compute_stability_metrics(values):
     }
 
 def compare_table2(run_dirs):
-    """Compare Table 2 results across runs with stability analysis"""
+    """Compare Table 2 results across runs with comprehensive stability analysis"""
     comparison = []
-    all_precisions = []
+    metrics = {'precision': [], 'recall': [], 'f1': []}
     
     for run_dir in run_dirs:
         run_id = Path(run_dir).name
@@ -47,12 +47,13 @@ def compare_table2(run_dirs):
         # Load metadata
         meta = load_run_metadata(run_dir)
         seed_base = meta.get('params', {}).get('seed_base', 'unknown') if meta else 'unknown'
+        n_trials = meta.get('params', {}).get('n_trials', 'unknown') if meta else 'unknown'
+        git_commit = meta.get('git_commit', 'unknown')[:8] if meta else 'unknown'
         
-        # Try to find table2 files
+        # Try to find table2 files (prefer estimated FN LASSO)
         table2_files = list(Path(run_dir).glob('table2_*.csv'))
         
         if table2_files:
-            # Load the main one (estimated FN LASSO)
             target_file = None
             for f in table2_files:
                 if 'estimated_fn_lasso' in f.name:
@@ -64,26 +65,34 @@ def compare_table2(run_dirs):
             
             df = pd.read_csv(target_file)
             
+            # Extract metrics
             if 'precision_mean' in df.columns:
                 avg_precision = df['precision_mean'].mean()
-                all_precisions.append(avg_precision)
                 avg_recall = df['recall_mean'].mean() if 'recall_mean' in df.columns else np.nan
                 avg_f1 = df['f1_mean'].mean() if 'f1_mean' in df.columns else np.nan
+                
+                metrics['precision'].append(avg_precision)
+                metrics['recall'].append(avg_recall)
+                metrics['f1'].append(avg_f1)
             else:
-                avg_precision = np.nan
-                avg_recall = np.nan
-                avg_f1 = np.nan
+                avg_precision = avg_recall = avg_f1 = np.nan
             
             comparison.append({
                 'Run ID': run_id,
-                'Seed Base': seed_base,
+                'Git': git_commit,
+                'Seed': seed_base,
+                'Trials': n_trials,
                 'Precision': f"{avg_precision:.4f}" if not np.isnan(avg_precision) else 'N/A',
                 'Recall': f"{avg_recall:.4f}" if not np.isnan(avg_recall) else 'N/A',
                 'F1': f"{avg_f1:.4f}" if not np.isnan(avg_f1) else 'N/A',
             })
     
-    # Compute stability
-    stability = compute_stability_metrics(all_precisions)
+    # Compute stability for all metrics
+    stability = {
+        'precision': compute_stability_metrics(metrics['precision']),
+        'recall': compute_stability_metrics(metrics['recall']),
+        'f1': compute_stability_metrics(metrics['f1']),
+    }
     
     return pd.DataFrame(comparison), stability
 
@@ -150,7 +159,35 @@ def main():
     print(df.to_string(index=False))
     
     # Print stability metrics
-    if stability and not np.isnan(stability['cv']):
+    if stability and isinstance(stability, dict):
+        print("\n" + "="*80)
+        print("STABILITY ANALYSIS")
+        print("="*80)
+        
+        for metric_name, stats in stability.items():
+            if not np.isnan(stats['cv']):
+                print(f"\n{metric_name.upper()}:")
+                print(f"  Mean:  {stats['mean']:.4f}")
+                print(f"  Std:   {stats['std']:.6f}")
+                print(f"  CV:    {stats['cv']*100:.2f}%")
+                print(f"  Range: [{stats['min']:.4f}, {stats['max']:.4f}]")
+                
+                if stats['cv'] < 0.05:
+                    print(f"  ✓ STABLE (CV < 5%)")
+                else:
+                    print(f"  ⚠ UNSTABLE (CV >= 5%)")
+        
+        # Overall assessment
+        all_cvs = [stats['cv'] for stats in stability.values() if not np.isnan(stats['cv'])]
+        if all_cvs:
+            max_cv = max(all_cvs)
+            print("\n" + "-"*80)
+            if max_cv < 0.05:
+                print("OVERALL: ✓ All metrics STABLE across runs (reproducible)")
+            else:
+                print(f"OVERALL: ⚠ Max CV = {max_cv*100:.2f}% (some instability)")
+    elif stability and not np.isnan(stability.get('cv', np.nan)):
+        # Old format (single metric)
         print("\n" + "="*80)
         print("STABILITY ANALYSIS (Precision)")
         print("="*80)

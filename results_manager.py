@@ -86,22 +86,32 @@ class ResultsManager:
         
         print(f"  ✓ Saved: {table_name}.csv")
     
-    def save_run_metadata(self, params):
+    def save_run_metadata(self, params, script_path='run_experiments_modular.py'):
         """
-        Save overall run metadata with enhanced details.
+        Save comprehensive run metadata with SHA256 fingerprinting.
         
         Parameters
         ----------
         params : dict
             Experiment parameters (seed_base, n_trials, etc.)
+        script_path : str
+            Main script path for hash tracking
         """
         import platform
         import numpy as np
         import pandas as pd
         
+        # Use ExperimentMetadata for SHA256 hashing
+        exp_meta = ExperimentMetadata(
+            script_path=script_path,
+            params=params,
+            output_dir=self.run_dir
+        )
+        
         metadata = {
             'run_id': self.run_id,
             'timestamp': datetime.now().isoformat(),
+            'fingerprint': exp_meta.fingerprint,  # 16-char unique ID
             'git_commit': self._get_git_hash(),
             'git_branch': self._get_git_branch(),
             'params': params,
@@ -111,12 +121,15 @@ class ResultsManager:
                 'machine': platform.machine(),
                 'numpy_version': np.__version__,
                 'pandas_version': pd.__version__,
+                'scikit_learn_version': self._get_package_version('sklearn'),
+                'scipy_version': self._get_package_version('scipy'),
             },
             'data_sources': {
                 'simulation': 'Generated on-the-fly via extended_dgp.py',
                 'empirical': 'data/empirical/te_features_weekly.csv (33 MB, 2005-2025)',
                 'note': 'All empirical data pre-downloaded, no external downloads'
-            }
+            },
+            'sha256': exp_meta.sha,  # Full hashes
         }
         
         meta_path = self.run_dir / 'run_metadata.json'
@@ -164,6 +177,22 @@ class ResultsManager:
         """Get Python version"""
         import sys
         return f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    
+    def _get_package_version(self, package_name):
+        """Get package version safely"""
+        try:
+            if package_name == 'sklearn':
+                import sklearn
+                return sklearn.__version__
+            elif package_name == 'scipy':
+                import scipy
+                return scipy.__version__
+            else:
+                import importlib
+                pkg = importlib.import_module(package_name)
+                return pkg.__version__
+        except:
+            return 'unknown'
     
     @classmethod
     def list_runs(cls, base_dir='results'):

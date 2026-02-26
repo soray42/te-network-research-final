@@ -11,8 +11,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from sklearn.decomposition import PCA
-from sklearn.linear_model import LassoLarsIC, LinearRegression
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import precision_score, recall_score, f1_score
 from scipy.stats import kendalltau, ttest_ind
 from tqdm import tqdm
