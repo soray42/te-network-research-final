@@ -20,6 +20,10 @@ build/
 .DS_Store
 Thumbs.db
 
+# CRITICAL: CRSP Empirical Data (COPYRIGHT PROTECTED - DO NOT UPLOAD)
+data/empirical/te_features_weekly.csv
+data/empirical/universe_500.csv
+
 # Results (temporary runs)
 results/dgp_*/
 results/te_*/
