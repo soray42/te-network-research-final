@@ -74,17 +74,28 @@ class ResultsManager:
         
         # Save metadata
         meta_path = self.run_dir / f"{table_name}_meta.json"
+        
+        # P2-8 FIX: Compute SHA256 for output CSV
+        import hashlib
+        sha256 = hashlib.sha256()
+        with open(output_path, 'rb') as f:
+            for chunk in iter(lambda: f.read(8192), b''):
+                sha256.update(chunk)
+        file_sha256 = sha256.hexdigest()
+        
         metadata = {
             'table': table_name,
             'timestamp': datetime.now().isoformat(),
             'description': description,
             'rows': len(df) if isinstance(df, pd.DataFrame) else 'unknown',
-            'columns': list(df.columns) if isinstance(df, pd.DataFrame) else 'unknown'
+            'columns': list(df.columns) if isinstance(df, pd.DataFrame) else 'unknown',
+            'sha256': file_sha256,  # Auto-computed file hash
+            'file_size': output_path.stat().st_size
         }
         with open(meta_path, 'w') as f:
             json.dump(metadata, f, indent=2)
         
-        print(f"Saved: {table_name}.csv")
+        print(f"Saved: {table_name}.csv (SHA256: {file_sha256[:16]}...)")
     
     def save_run_metadata(self, params, script_path='run_experiments_modular.py'):
         """
