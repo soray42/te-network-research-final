@@ -91,8 +91,9 @@ def run_power_analysis(trials=50):
                     lambda_NIO=premium / 252  # Convert annualized to daily
                 )
                 
-                # Compute true NIO (Oracle)
-                nio_oracle = compute_nio(A_true_binary.astype(float))
+                # Use oracle NIO from DGP (P1-5 FIX: aligned with planted signal)
+                # NIO_true_std is the standardized NIO used to plant the premium
+                nio_oracle = NIO_true_std
                 
                 # Estimate TE networks
                 te_lasso, adj_lasso = compute_linear_te_matrix(R, method="lasso")

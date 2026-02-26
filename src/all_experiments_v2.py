@@ -13,6 +13,7 @@ from pathlib import Path
 from sklearn.decomposition import PCA
 from scipy.stats import kendalltau, ttest_ind
 from tqdm import tqdm
+from factor_neutral_preprocessing import preprocess_returns  # P1-7 FIX: unified preprocessing
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -58,13 +59,9 @@ def run_oracle_extended():
                     return_factors=True
                 )
                 
-                # Oracle: use true factors
-                R_oracle = R - F_true @ np.linalg.lstsq(F_true, R, rcond=None)[0]
-                
-                # Estimated: use PCA
-                pca = PCA(n_components=K)
-                F_hat = pca.fit_transform(R)
-                R_est = R - F_hat @ pca.components_
+                # P1-7 FIX: Use unified preprocessing (with intercept, per-asset residualization)
+                R_oracle = preprocess_returns(R, F_true, fit_intercept=True)
+                R_est = preprocess_returns(R, None, fit_intercept=True, n_components=K)  # PCA inside
 
                 base = dict(N=N, T=T, T_N=round(T/N,1), trial=trial)
                 for Rdata, label in [(R,'Raw'),(R_oracle,'Oracle'),(R_est,'Estimated(PCA)')]:
