@@ -81,7 +81,7 @@ def portfolio_sort(data, signal_col, ret_col, n_groups=5):
             q_stocks = valid[valid["quintile"] == q]
             if len(q_stocks) > 0:
                 results.append({
-                    "date": date,
+                    "formation_date": date,  # P0-2 FIX: Keep consistent column name
                     "quintile": q,
                     "ret": q_stocks[ret_col].mean(),
                     "n_stocks": len(q_stocks)
