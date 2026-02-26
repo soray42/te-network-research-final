@@ -61,14 +61,21 @@ python src/empirical_portfolio_sort.py
 .
 ├── run_experiments_modular.py  # 🚀 ONE-CLICK MODULAR RUNNER (start here!)
 ├── compare_runs.py             # Benchmark comparison with stability analysis
-├── results_manager.py          # Results versioning system
-├── simulation_config.py        # Dual-mode seed configuration
-├── experiment_metadata.py      # SHA256 fingerprinting & lineage tracking
+├── test_algorithms.py          # Unit tests (16 tests, pytest)
+│
+├── scripts/                    # Infrastructure utilities
+│   ├── results_manager.py      # Results versioning system
+│   ├── simulation_config.py    # Dual-mode seed configuration
+│   └── experiment_metadata.py  # SHA256 fingerprinting & lineage tracking
 │
 ├── src/                        # Python source code
-│   ├── te_core.py              # ⭐ CORE: Unified TE/NIO implementations (SINGLE SOURCE OF TRUTH)
+│   ├── algorithms.py           # ⭐ CORE: Pure TE/NIO implementations (SINGLE SOURCE OF TRUTH)
+│   ├── te_core.py              # API wrapper (imports from algorithms.py)
+│   ├── evaluation.py           # Evaluation metrics (precision, recall, F1, hub recovery)
+│   ├── dgp.py                  # Unified DGP interface
 │   ├── extended_dgp.py         # GARCH+t5+Factor DGP (base)
 │   ├── extended_dgp_planted_signal.py  # DGP with planted NIO premium (Table 6)
+│   ├── factor_neutral_preprocessing.py # Factor-neutral preprocessing (3 modes)
 │   ├── run_factor_neutral_sim.py       # Table 2 (Main Results)
 │   ├── all_experiments_v2.py           # Table 4 (Oracle vs Estimated)
 │   ├── empirical_portfolio_sort.py     # Table 5 (Portfolio Sort)
@@ -306,9 +313,9 @@ Every run generates comprehensive metadata in `results/<run_id>/run_metadata.jso
 
 **Core Design Principle**: Single Source of Truth
 
-### `src/te_core.py` - The Only TE/NIO Implementation
+### `src/algorithms.py` - The Only TE/NIO Implementation
 
-All experiments import from this **single source of truth**:
+All experiments import from this **single source of truth** (via `te_core.py` wrapper):
 
 ```python
 from te_core import compute_linear_te_matrix, compute_nio
@@ -328,7 +335,7 @@ nio = compute_nio(te_matrix, method='binary')
 - ✅ **Guaranteed consistency** - All experiments use identical implementation
 - ✅ **200+ lines of documentation** - Full algorithm specification
 
-**Verification**: Run `python audit_code_consistency.py` to verify zero duplicates.
+**Verification**: Run `pytest test_algorithms.py -v` to verify all 16 unit tests pass.
 
 ---
 
@@ -358,10 +365,9 @@ extended_dgp.py (Base: GARCH + Factor)
 ## 🧪 Code Verification
 
 ```bash
-# Check implementation consistency
-python audit_code_consistency.py
+# Run unit tests (16 tests covering all core algorithms)
+pytest test_algorithms.py -v
 
 # Expected output:
-# TE difference: 0.00e+00
-# All imports: OK
+# 16 passed
 ```

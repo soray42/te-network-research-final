@@ -139,7 +139,9 @@ def preprocess_returns(R, mode='raw', true_factors=None, n_factors=3):
 def extract_factors_from_dgp(N=50, T=500, density=0.05, seed=42):
     """
     Wrapper to generate data AND extract true factors from garch_factor DGP.
-    
+
+    Uses the canonical generate_sparse_var_extended() with return_factors=True.
+
     Returns
     -------
     R : ndarray (T, N)
@@ -149,63 +151,12 @@ def extract_factors_from_dgp(N=50, T=500, density=0.05, seed=42):
     A_true : ndarray (N, N)
         True adjacency matrix
     """
-    # We need to modify extended_dgp.py to ALSO return F
-    # For now, re-implement the factor generation here
-    
-    rng = np.random.RandomState(seed)
-    
-    # Generate factors (same as in extended_dgp.py)
-    K = 3
-    sigma_base = 0.01
-    factor_vol = sigma_base * 1.5
-    
-    F = np.zeros((T, K))
-    for t in range(1, T):
-        F[t] = 0.1 * F[t-1] + rng.normal(0, factor_vol, K)
-    
-    # Generate returns (simplified from extended_dgp.py)
-    # This is just for testing — in production, we'll modify extended_dgp.py
-    B = rng.normal(0, 1, (N, K)) * 0.4
-    
-    # Idiosyncratic + VAR
-    omega = (sigma_base * 0.7)**2 * 0.05
-    alpha = 0.08
-    beta = 0.90
-    
-    u = np.zeros((T, N))
-    h = np.full(N, (sigma_base * 0.7)**2)
-    
-    for t in range(T):
-        z = rng.standard_t(df=5, size=N)
-        u[t] = np.sqrt(h) * z
-        if t < T - 1:
-            h = omega + alpha * u[t]**2 + beta * h
-            h = np.maximum(h, 1e-10)
-    
-    innovations = F @ B.T + u
-    
-    # VAR(1) coefficient matrix (simplified)
-    A = np.zeros((N, N))
-    n_edges = int(N * N * density)
-    off_diag = [(i, j) for i in range(N) for j in range(N) if i != j]
-    edge_idx = rng.choice(len(off_diag), size=n_edges, replace=False)
-    
-    for idx in edge_idx:
-        i, j = off_diag[idx]
-        A[i, j] = rng.uniform(0.05, 0.15) * rng.choice([-1, 1])
-    
-    eigvals = np.abs(np.linalg.eigvals(A))
-    if eigvals.max() > 0.9:
-        A = A * (0.9 / eigvals.max())
-    
-    A_true = (A != 0).astype(int)
-    
-    # Generate returns
-    R = np.zeros((T, N))
-    R[0] = rng.normal(0, sigma_base, N)
-    for t in range(1, T):
-        R[t] = A @ R[t-1] + innovations[t]
-    
+    from extended_dgp import generate_sparse_var_extended
+
+    R, _A_coef, A_true, F = generate_sparse_var_extended(
+        N=N, T=T, density=density, seed=seed,
+        dgp='garch_factor', return_factors=True
+    )
     return R, F, A_true
 
 

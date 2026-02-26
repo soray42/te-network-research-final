@@ -10,6 +10,7 @@ Functions:
 """
 
 import numpy as np
+from scipy.stats import kendalltau
 from algorithms import compute_precision_recall_f1  # Import from single source of truth
 
 
@@ -29,33 +30,40 @@ def eval_metrics(A_true, A_pred, top_k=5):
     Returns
     -------
     metrics : dict
-        Contains: precision, recall, f1, hub_recovery, density
+        Contains: precision, recall, f1, hub_recovery, density, kendall_tau
     """
     N = A_true.shape[0]
-    
+
     # Basic metrics
     precision, recall, f1 = compute_precision_recall_f1(A_true, A_pred)
-    
-    # Hub recovery
-    out_deg_true = A_true.sum(axis=1)
-    out_deg_pred = A_pred.sum(axis=1)
-    
+
+    # Hub recovery (P1-A FIX: use axis=0 for out-degree; A[i,j]=j->i, so col sums = out-degree)
+    out_deg_true = A_true.sum(axis=0)
+    out_deg_pred = A_pred.sum(axis=0)
+
     if top_k < N:
         top_hubs_true = np.argsort(out_deg_true)[-top_k:]
         top_hubs_pred = np.argsort(out_deg_pred)[-top_k:]
         hub_recovery = len(set(top_hubs_true) & set(top_hubs_pred)) / top_k
     else:
         hub_recovery = np.nan
-    
+
     # Density
     density = A_pred.sum() / (N * (N - 1))
-    
+
+    # Kendall rank correlation between true and predicted out-degree
+    if out_deg_true.std() > 0 and out_deg_pred.std() > 0:
+        tau, _ = kendalltau(out_deg_true, out_deg_pred)
+    else:
+        tau = 0.0
+
     return {
         'precision': precision,
         'recall': recall,
         'f1': f1,
         'hub_recovery': hub_recovery,
-        'density': density
+        'density': density,
+        'kendall_tau': tau
     }
 
 

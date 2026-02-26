@@ -17,12 +17,13 @@ from factor_neutral_preprocessing import preprocess_returns  # P1-7 FIX: unified
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import warnings; warnings.filterwarnings('ignore')
+import warnings; warnings.filterwarnings('ignore', category=FutureWarning)
+warnings.filterwarnings('ignore', message='.*ConvergenceWarning.*')
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Unified imports
-from te_core import compute_linear_te_matrix
+from te_core import compute_linear_te_matrix, compute_nio
 from dgp import generate_sparse_var
 from evaluation import eval_metrics
 
@@ -60,8 +61,8 @@ def run_oracle_extended():
                 )
                 
                 # P1-7 FIX: Use unified preprocessing (with intercept, per-asset residualization)
-                R_oracle = preprocess_returns(R, F_true, fit_intercept=True)
-                R_est = preprocess_returns(R, None, fit_intercept=True, n_components=K)  # PCA inside
+                R_oracle, _ = preprocess_returns(R, mode='oracle_fn', true_factors=F_true)
+                R_est, _ = preprocess_returns(R, mode='estimated_fn', n_factors=K)
 
                 base = dict(N=N, T=T, T_N=round(T/N,1), trial=trial)
                 for Rdata, label in [(R,'Raw'),(R_oracle,'Oracle'),(R_est,'Estimated(PCA)')]:
@@ -265,7 +266,8 @@ def run_alternative_signals():
             for trial in range(N_TRIALS):
                 seed = SEED_BASE+trial*1000+N+T
                 R, _, A_true = generate_sparse_var(N=N,T=T,density=0.05,seed=seed,dgp='garch_factor')
-                true_od   = A_true.sum(axis=1)
+                # P0-B FIX: Use column sums for out-degree (A[i,j] = j->i convention)
+                true_od   = A_true.sum(axis=0)
                 true_hubs = set(np.argsort(true_od)[-5:])
 
                 # LASSO-TE
@@ -280,10 +282,10 @@ def run_alternative_signals():
                     ('LASSO', TE_las, A_las),
                     ('OLS',   TE_ols, A_ols),
                 ]:
-                    # NIO
-                    nio   = TE_mat.sum(axis=1) - TE_mat.sum(axis=0)
-                    # Weighted out-degree
-                    wod   = TE_mat.sum(axis=1)
+                    # NIO — P0-B FIX: use canonical compute_nio (correct direction)
+                    nio   = compute_nio(TE_mat, method='weighted')
+                    # Weighted out-degree (column sums: A[i,j]=j->i, so col j = outflow from j)
+                    wod   = TE_mat.sum(axis=0)
                     # PageRank
                     pr    = compute_pagerank(TE_mat)
                     # Hub recovery for each signal
@@ -326,12 +328,12 @@ def run_simulation_nio_baseline():
                 R_est, A_mat, A_true = generate_sparse_var(
                     N=N, T=T, density=0.05, seed=seed, dgp='garch_factor')
 
-                # Oracle NIO (from true A)
-                oracle_nio = (A_true.sum(axis=1) - A_true.sum(axis=0)).astype(float)
+                # Oracle NIO (from true A) — P0-B FIX: use canonical compute_nio
+                oracle_nio = compute_nio(A_true.astype(float), method='binary')
                 # LASSO NIO
-                TE_las, _ = compute_linear_te_matrix(R_est, method="lasso")
+                TE_las, A_las = compute_linear_te_matrix(R_est, method="lasso")
                 np.fill_diagonal(TE_las, 0)
-                lasso_nio = TE_las.sum(axis=1) - TE_las.sum(axis=0)
+                lasso_nio = compute_nio(A_las.astype(float), method='binary')
 
                 # Generate OOS returns from the TRUE DGP (NOT from A_true which is binary)
                 # Use actual VAR coefficients
@@ -368,14 +370,41 @@ def run_simulation_nio_baseline():
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
+EXPERIMENT_MAP = {
+    '3':  ('Exp3: Oracle Extended',          run_oracle_extended),
+    '4':  ('Exp4: Threshold-VAR Wide',       run_threshold_var_wide),
+    '9':  ('Exp9: VAR(2)',                   run_var2),
+    '10': ('Exp10: Alternative Signals',     run_alternative_signals),
+    '11': ('Exp11: Simulation NIO Baseline', run_simulation_nio_baseline),
+}
+
 if __name__ == '__main__':
-    import time; t0 = time.time()
-    run_oracle_extended()       # #3  ~20min
-    run_threshold_var_wide()    # #4  ~25min
-    run_var2()                  # #9  ~15min
-    run_alternative_signals()   # #10 ~15min
-    run_simulation_nio_baseline() # #11 ~10min
+    import argparse, time
+
+    parser = argparse.ArgumentParser(description='Extended experiments (Table 4 and supplementary)')
+    parser.add_argument('--trials', type=int, default=None,
+                        help='Number of trials per cell (overrides N_TRIALS)')
+    parser.add_argument('--experiments', nargs='+', default=['all'],
+                        help='Experiment numbers to run (e.g., 3 4 9 10 11, or "all")')
+    args = parser.parse_args()
+
+    if args.trials is not None:
+        N_TRIALS = args.trials
+
+    t0 = time.time()
+
+    if 'all' in args.experiments:
+        exps_to_run = list(EXPERIMENT_MAP.keys())
+    else:
+        exps_to_run = args.experiments
+
+    for exp_id in exps_to_run:
+        if exp_id in EXPERIMENT_MAP:
+            name, func = EXPERIMENT_MAP[exp_id]
+            print(f"\n>>> Running {name}")
+            func()
+        else:
+            print(f"WARNING: Unknown experiment '{exp_id}', skipping")
+
     print(f"\n=== ALL DONE in {(time.time()-t0)/60:.1f} min ===")
-
-
 

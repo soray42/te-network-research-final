@@ -106,9 +106,10 @@ def run_table2_simulation(dgp='garch_factor', preprocessing='estimated_fn', meth
                 if (trial + 1) % 10 == 0:
                     print(f"  Trial {trial+1}/{n_trials}...", end='\r')
                 
-                # P2 FIX: Use centralized seed strategy from simulation_config
-                # (For now, keep simple formula for backward compatibility with existing results)
-                # TODO: Consider migrating to SimulationConfig.get_seed(trial, N, T) in future
+                # Seed formula: fixed per trial, independent of (N, T)
+                # NOTE: Intentionally kept simple for backward compatibility with published results.
+                # Other scripts use seed_base + trial*1000 + N + T, but changing this formula
+                # would alter Table 2 outputs.
                 seed = 1000 + trial
                 metrics = run_single_trial(
                     N=N, T=T, density=0.05, seed=seed, 

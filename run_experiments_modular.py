@@ -72,7 +72,7 @@ def run_table4(mgr, args):
     
     print(result.stdout)
     
-    result_file = 'results/oracle_vs_estimated.csv'
+    result_file = 'results/oracle_extended.csv'
     if Path(result_file).exists():
         mgr.save_table('table4', result_file, description='Oracle vs Estimated')
 
