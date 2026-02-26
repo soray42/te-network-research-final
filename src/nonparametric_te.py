@@ -1,15 +1,25 @@
 ﻿"""
 nonparametric_te.py
-éžå‚æ•° Transfer Entropy ä¼°è®¡ï¼ˆKNN-based Shannon entropyï¼‰
-å¯¹æ¯”å®žéªŒï¼šLinear TE (OLS/LASSO) vs Nonparametric TE (KNN)
+Nonparametric Transfer Entropy estimation (KNN-based Shannon entropy)
+Comparison experiment: Linear TE (OLS/LASSO) vs Nonparametric TE (KNN)
 
-ç›®æ ‡ï¼šè¯æ˜Žåœ¨é‡‘èž T/N æ¯”çŽ‡ä¸‹ï¼Œéžå‚æ•°æ–¹æ³•çš„ç»´åº¦ç¾éš¾æ¯”çº¿æ€§æ–¹æ³•æ›´ä¸¥é‡
+Objective: Demonstrate that at financial T/N ratios, nonparametric methods
+suffer more severely from curse of dimensionality than linear methods.
 
 Method:
   - KNN-based entropy estimation (Kozachenko-Leonenko estimator)
   - Embedding dimension d=1 (conservative, avoids curse of dimensionality)
   - k=3 nearest neighbors (standard choice)
   
+THRESHOLD RULES (P1-4 Note):
+  - KNN: Fixed 95th percentile (5% density) - standard sparse network rule
+  - OLS: t-statistic > 2.0 - standard statistical significance
+  - LASSO: BIC selection - adaptive density based on information criterion
+  
+These are DIFFERENT decision rules, representing each method's "typical use case"
+in practice. This is intentional - we compare methods as they would be deployed,
+not under artificial uniform thresholds.
+
 References:
   - Kraskov et al. (2004) "Estimating mutual information"
   - Barnett et al. (2009) "Granger Causality and Transfer Entropy Are Equivalent for Gaussian Variables"

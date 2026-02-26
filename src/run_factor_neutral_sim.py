@@ -135,7 +135,9 @@ def run_table2_simulation(dgp='garch_factor', preprocessing='estimated_fn', meth
                 'n_trials': n_trials,
                 'dgp': dgp,
                 'preprocessing': preprocessing,
-                'method': method
+                'method': method,
+                'seed_formula': '1000 + trial',  # P1-3: Document seed strategy
+                'seed_note': 'Fixed per trial (backward compatibility mode)'
             }
             results.append(agg)
             

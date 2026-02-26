@@ -135,11 +135,7 @@ class ResultsManager:
                 'scikit_learn_version': self._get_package_version('sklearn'),
                 'scipy_version': self._get_package_version('scipy'),
             },
-            'data_sources': {
-                'simulation': 'Generated on-the-fly via extended_dgp.py',
-                'empirical': 'data/empirical/te_features_weekly.csv (33 MB, 2005-2025)',
-                'note': 'All empirical data pre-downloaded, no external downloads'
-            },
+            'data_sources': self._get_data_sources_info(),  # P0-2 FIX: Compute actual hashes
             'sha256': exp_meta.sha,  # Full hashes
         }
         
@@ -172,6 +168,49 @@ class ResultsManager:
             return result.stdout.strip()
         except:
             return 'unknown'
+    
+    def _get_data_sources_info(self):
+        """
+        P0-2 FIX: Compute SHA256 for empirical data files at run-time.
+        Returns dict with data source info including verified hashes.
+        """
+        import hashlib
+        from pathlib import Path
+        
+        data_dir = Path(__file__).parent.parent / 'data' / 'empirical'
+        expected_sha256 = {
+            'te_features_weekly.csv': '87544851c75673c0cc99823953ce90d917210a5312d7342dab83f8795d380056',
+            'universe_500.csv': '8cee923a3099f501b488b616d0baf4cce4db6c38bb5143fbfb695fba121f3835'
+        }
+        
+        result = {
+            'simulation': 'Generated on-the-fly via extended_dgp.py',
+            'empirical': {}
+        }
+        
+        # Check and hash empirical data files
+        for filename, expected_hash in expected_sha256.items():
+            filepath = data_dir / filename
+            if filepath.exists():
+                sha256 = hashlib.sha256()
+                with open(filepath, 'rb') as f:
+                    for chunk in iter(lambda: f.read(8192), b''):
+                        sha256.update(chunk)
+                actual_hash = sha256.hexdigest()
+                
+                result['empirical'][filename] = {
+                    'file': str(filepath.relative_to(Path(__file__).parent.parent)),
+                    'sha256': actual_hash,
+                    'verified': actual_hash.lower() == expected_hash.lower(),
+                    'size_mb': round(filepath.stat().st_size / 1024 / 1024, 1)
+                }
+            else:
+                result['empirical'][filename] = {
+                    'status': 'NOT_FOUND',
+                    'note': 'File not included (CRSP copyright). Simulation experiments still work.'
+                }
+        
+        return result
     
     def _get_git_branch(self):
         """Get current git branch"""
