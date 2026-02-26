@@ -1,4 +1,4 @@
-"""
+﻿"""
 FIX 1: Factor-Neutral Simulation Pipeline
 Re-run Table 2, 4, 5 with factor-neutral preprocessing
 
@@ -26,9 +26,11 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from extended_dgp import generate_sparse_var_extended
+# Unified imports
+from dgp import generate_sparse_var
 from factor_neutral_preprocessing import preprocess_returns
 from te_core import compute_linear_te_matrix
+from evaluation import compute_precision_recall_f1
 
 
 def estimate_te_network(R, method='ols', penalty_factor=1.0):
@@ -107,11 +109,11 @@ def run_single_trial(N, T, density, seed, dgp, preprocessing, method):
     """
     # Generate data
     if dgp == 'garch_factor' and preprocessing in ['oracle_fn', 'estimated_fn']:
-        R, A_coef, A_true, F_true = generate_sparse_var_extended(
+        R, A_coef, A_true, F_true = generate_sparse_var(
             N=N, T=T, density=density, seed=seed, dgp=dgp, return_factors=True
         )
     else:
-        R, A_coef, A_true = generate_sparse_var_extended(
+        R, A_coef, A_true = generate_sparse_var(
             N=N, T=T, density=density, seed=seed, dgp=dgp
         )
         F_true = None
@@ -252,3 +254,4 @@ if __name__ == '__main__':
     print("\nSUMMARY TABLE:")
     print(df[['N', 'T', 'T_N', 'precision_mean', 'recall_mean', 'f1_mean', 
               'hub_recovery_mean', 'kendall_tau_mean']].to_string(index=False))
+

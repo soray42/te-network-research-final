@@ -1,4 +1,4 @@
-"""
+﻿"""
 all_experiments_v2.py — 新增模拟：
 #3:  Generated Regressor 扩展（T/N={1,2,5,10}, OLS+LASSO）
 #4:  Threshold-VAR 宽 T/N + 规格说明
@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from sklearn.decomposition import PCA
-from sklearn.metrics import precision_score, recall_score, f1_score
 from scipy.stats import kendalltau, ttest_ind
 from tqdm import tqdm
 import matplotlib
@@ -20,8 +19,11 @@ import matplotlib.pyplot as plt
 import warnings; warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from extended_dgp import generate_sparse_var_extended
+
+# Unified imports
 from te_core import compute_linear_te_matrix
+from dgp import generate_sparse_var
+from evaluation import eval_metrics
 
 # Use relative path from repo root
 REPO_ROOT = Path(__file__).parent.parent
@@ -29,26 +31,14 @@ OUTPUT = REPO_ROOT / "results"
 SEED_BASE = 42
 N_TRIALS  = 8
 
-def eval_metrics(A_true, A_pred, top_k=5):
-    N = A_true.shape[0]
-    mask = ~np.eye(N, dtype=bool).flatten()
-    yt = A_true.flatten()[mask]; yp = A_pred.flatten()[mask]
-    return dict(
-        precision=precision_score(yt, yp, zero_division=0),
-        recall=recall_score(yt, yp, zero_division=0),
-        f1=f1_score(yt, yp, zero_division=0),
-        hub_recovery=len(set(np.argsort(A_true.sum(1))[-top_k:]) &
-                         set(np.argsort(A_pred.sum(1))[-top_k:])) / top_k,
-        kendall_tau=kendalltau(A_true.sum(1), A_pred.sum(1))[0],
-    )
-
+# eval_metrics now imported from evaluation.py (unified)
 
 # ── Exp #3: Generated Regressor Extended ─────────────────────────────────────
 
 def run_oracle_extended():
     print("\n=== Exp #3: Generated Regressor Extended ===")
     print("⚠️  FIXED: Now using GARCH+t5 DGP (consistent with Table 2)")
-    from extended_dgp import generate_sparse_var_extended
+    from extended_dgp import generate_sparse_var
     
     K = 3
     # Cover wider T/N range: N=50, T in {50,100,250,500} → T/N={1,2,5,10}
@@ -60,7 +50,7 @@ def run_oracle_extended():
                 seed = SEED_BASE + trial*1000 + N + T
                 
                 # ✅ FIX: Use GARCH+t5 DGP (same as Table 2)
-                R, A_coef, A_true, F_true = generate_sparse_var_extended(
+                R, A_coef, A_true, F_true = generate_sparse_var(
                     N=N, T=T,
                     density=0.05,
                     dgp='garch_factor',  # ← GARCH+t5, not Gaussian! (K=3 hardcoded in function)
@@ -162,7 +152,7 @@ def run_threshold_var_wide():
             for trial in range(N_TRIALS):
                 seed = SEED_BASE+trial*1000+N+T
                 # Linear baseline
-                R_lin, _, A_lin = generate_sparse_var_extended(N=N,T=T,density=0.05,seed=seed,dgp='garch_factor')
+                R_lin, _, A_lin = generate_sparse_var(N=N,T=T,density=0.05,seed=seed,dgp='garch_factor')
                 for meth, Ap in [('OLS',compute_linear_te_matrix(R_lin, method="ols", t_threshold=2.0)[1]),
                                   ('LASSO',compute_linear_te_matrix(R_lin, method="lasso")[1])]:
                     m = eval_metrics(A_lin, Ap)
@@ -233,7 +223,7 @@ def run_var2():
             for trial in range(N_TRIALS):
                 seed = SEED_BASE+trial*1000+N+T
                 # VAR(1) baseline
-                R1, _, A1 = generate_sparse_var_extended(N=N,T=T,density=0.05,seed=seed,dgp='garch_factor')
+                R1, _, A1 = generate_sparse_var(N=N,T=T,density=0.05,seed=seed,dgp='garch_factor')
                 for meth, Ap in [('OLS',compute_linear_te_matrix(R1, method="ols", t_threshold=2.0)[1]),
                                   ('LASSO',compute_linear_te_matrix(R1, method="lasso")[1])]:
                     m = eval_metrics(A1, Ap)
@@ -277,7 +267,7 @@ def run_alternative_signals():
         for N,T in configs:
             for trial in range(N_TRIALS):
                 seed = SEED_BASE+trial*1000+N+T
-                R, _, A_true = generate_sparse_var_extended(N=N,T=T,density=0.05,seed=seed,dgp='garch_factor')
+                R, _, A_true = generate_sparse_var(N=N,T=T,density=0.05,seed=seed,dgp='garch_factor')
                 true_od   = A_true.sum(axis=1)
                 true_hubs = set(np.argsort(true_od)[-5:])
 
@@ -336,7 +326,7 @@ def run_simulation_nio_baseline():
                 rng  = np.random.RandomState(seed+99999)
 
                 # Generate estimation window
-                R_est, A_mat, A_true = generate_sparse_var_extended(
+                R_est, A_mat, A_true = generate_sparse_var(
                     N=N, T=T, density=0.05, seed=seed, dgp='garch_factor')
 
                 # Oracle NIO (from true A)
@@ -352,7 +342,7 @@ def run_simulation_nio_baseline():
                 T_oos = 100
                 # Re-extract A from generate call (need continuous A, not binary)
                 # Use a simple approach: generate fresh OOS returns with same seed
-                R_oos, A_cont, _ = generate_sparse_var_extended(
+                R_oos, A_cont, _ = generate_sparse_var(
                     N=N, T=T_oos+5, density=0.05, seed=seed+1, dgp='garch_factor')
 
                 for h in range(0, T_oos, 5):
@@ -389,5 +379,6 @@ if __name__ == '__main__':
     run_alternative_signals()   # #10 ~15min
     run_simulation_nio_baseline() # #11 ~10min
     print(f"\n=== ALL DONE in {(time.time()-t0)/60:.1f} min ===")
+
 
 

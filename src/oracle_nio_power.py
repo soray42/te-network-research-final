@@ -22,8 +22,10 @@ import sys
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from extended_dgp_planted_signal import generate_sparse_var_with_nio_premium
+# Unified imports
+from dgp import generate_sparse_var_with_nio_premium
 from te_core import compute_linear_te_matrix, compute_nio
+from evaluation import cross_sectional_tstat
 
 # ============================================================================
 # Configuration
@@ -41,43 +43,8 @@ TRIALS = 50  # Default, can override with --trials
 
 # ============================================================================
 # ============================================================================
-# Helper Functions
+# cross_sectional_tstat now imported from evaluation.py (unified)
 # ============================================================================
-
-def cross_sectional_tstat(returns, nio):
-    """
-    Compute t-statistic from cross-sectional regression: returns ~ NIO.
-    
-    Args:
-        returns: (T, N) array of returns
-        nio: (N,) array of NIO values
-        
-    Returns:
-        t-statistic
-    """
-    # Mean returns across time for each stock
-    mean_rets = returns.mean(axis=0)
-    
-    # OLS regression: mean_ret_i = alpha + beta * nio_i + error
-    # Using numpy's lstsq for speed
-    X = np.column_stack([np.ones(len(nio)), nio])
-    beta_hat = np.linalg.lstsq(X, mean_rets, rcond=None)[0]
-    
-    # Residuals and standard error
-    fitted = X @ beta_hat
-    resid = mean_rets - fitted
-    n = len(nio)
-    
-    # Standard error of beta (NIO coefficient)
-    resid_var = (resid ** 2).sum() / (n - 2)
-    X_var = ((X[:, 1] - X[:, 1].mean()) ** 2).sum()
-    se_beta = np.sqrt(resid_var / X_var)
-    
-    # t-stat
-    t_stat = beta_hat[1] / se_beta if se_beta > 0 else 0
-    
-    return t_stat
-
 
 # ============================================================================
 # Main Experiment
