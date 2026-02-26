@@ -4,45 +4,13 @@ Unified Evaluation Metrics Module
 All evaluation logic called from here. No duplicates.
 
 Functions:
-- compute_precision_recall_f1: Basic metrics
+- compute_precision_recall_f1: Basic metrics (imported from algorithms)
 - eval_metrics: Extended metrics with hub recovery
 - cross_sectional_tstat: t-stat for NIO-return regression
 """
 
 import numpy as np
-
-
-def compute_precision_recall_f1(A_true, A_pred):
-    """
-    Compute precision, recall, and F1 score.
-    
-    Parameters
-    ----------
-    A_true : ndarray (N, N)
-        True adjacency matrix
-    A_pred : ndarray (N, N)
-        Predicted adjacency matrix
-    
-    Returns
-    -------
-    precision : float
-    recall : float
-    f1 : float
-    """
-    N = A_true.shape[0]
-    mask = ~np.eye(N, dtype=bool)
-    y_true = A_true[mask].flatten()
-    y_pred = A_pred[mask].flatten()
-    
-    TP = ((y_true == 1) & (y_pred == 1)).sum()
-    FP = ((y_true == 0) & (y_pred == 1)).sum()
-    FN = ((y_true == 1) & (y_pred == 0)).sum()
-    
-    precision = TP / (TP + FP) if (TP + FP) > 0 else 0.0
-    recall = TP / (TP + FN) if (TP + FN) > 0 else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
-    
-    return precision, recall, f1
+from algorithms import compute_precision_recall_f1  # Import from single source of truth
 
 
 def eval_metrics(A_true, A_pred, top_k=5):
