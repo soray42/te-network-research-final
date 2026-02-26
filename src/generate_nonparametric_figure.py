@@ -133,13 +133,15 @@ print(r"""
     \midrule""")
 
 for tn_target in [0.6, 2.5, 5.0]:
+    # P0-1 FIX: Use same aggregation as figure (mean, not first row)
     subset = df[(df['T/N'] >= tn_target - 0.1) & (df['T/N'] <= tn_target + 0.1)]
     row_data = {}
     for method in methods:
         method_data = subset[subset['method'] == method]
         if len(method_data) > 0:
-            mean = method_data['precision_mean'].values[0]
-            std = method_data['precision_std'].values[0]
+            # Take mean across all configs in this T/N bucket (matches figure aggregation)
+            mean = method_data['precision_mean'].mean()
+            std = method_data['precision_std'].mean()
             row_data[method] = f"{mean:.1%} $\\pm$ {std:.1%}"
         else:
             row_data[method] = "---"
