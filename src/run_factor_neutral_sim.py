@@ -33,29 +33,7 @@ from te_core import compute_linear_te_matrix
 from evaluation import compute_precision_recall_f1
 
 
-def estimate_te_network(R, method='ols', penalty_factor=1.0):
-    """
-    Estimate TE network from return matrix R.
-    
-    DEPRECATED: This is now a thin wrapper around te_core.compute_linear_te_matrix()
-    for backward compatibility.
-    
-    Parameters
-    ----------
-    R : ndarray (T, N)
-        Return matrix
-    method : str
-        'ols' or 'lasso'
-    penalty_factor : float
-        Ignored (kept for backward compatibility)
-    
-    Returns
-    -------
-    A_est : ndarray (N, N)
-        Estimated adjacency matrix (binary)
-    """
-    _, A_est = compute_linear_te_matrix(R, method=method, t_threshold=2.0)
-    return A_est
+# estimate_te_network removed - use te_core.compute_linear_te_matrix() directly
 
 
 def compute_metrics(A_true, A_est):
@@ -128,8 +106,8 @@ def run_single_trial(N, T, density, seed, dgp, preprocessing, method):
     else:
         raise ValueError(f"Unknown preprocessing mode: {preprocessing}")
     
-    # Estimate network
-    A_est = estimate_te_network(R_proc, method=method)
+    # Estimate network (call unified te_core function)
+    _, A_est = compute_linear_te_matrix(R_proc, method=method, t_threshold=2.0)
     
     # Compute metrics
     metrics = compute_metrics(A_true, A_est)

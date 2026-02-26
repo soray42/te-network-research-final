@@ -1,9 +1,9 @@
-"""
+﻿"""
 nonparametric_te.py
-非参数 Transfer Entropy 估计（KNN-based Shannon entropy）
-对比实验：Linear TE (OLS/LASSO) vs Nonparametric TE (KNN)
+éžå‚æ•° Transfer Entropy ä¼°è®¡ï¼ˆKNN-based Shannon entropyï¼‰
+å¯¹æ¯”å®žéªŒï¼šLinear TE (OLS/LASSO) vs Nonparametric TE (KNN)
 
-目标：证明在金融 T/N 比率下，非参数方法的维度灾难比线性方法更严重
+ç›®æ ‡ï¼šè¯æ˜Žåœ¨é‡‘èž T/N æ¯”çŽ‡ä¸‹ï¼Œéžå‚æ•°æ–¹æ³•çš„ç»´åº¦ç¾éš¾æ¯”çº¿æ€§æ–¹æ³•æ›´ä¸¥é‡
 
 Method:
   - KNN-based entropy estimation (Kozachenko-Leonenko estimator)
@@ -25,8 +25,11 @@ from tqdm import tqdm
 import warnings; warnings.filterwarnings('ignore')
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from extended_dgp import generate_sparse_var_extended
+
+# Unified imports
+from dgp import generate_sparse_var
 from te_core import compute_linear_te_matrix
+from evaluation import eval_metrics
 
 # Use relative path from repo root
 REPO_ROOT = Path(__file__).parent.parent
@@ -40,8 +43,8 @@ def knn_entropy(X, k=3):
     """
     KNN-based Shannon entropy estimator (Kozachenko-Leonenko)
     
-    H(X) ≈ -ψ(k) + ψ(n) + log(c_d) + (d/n) Σ log(ε_i)
-    where ε_i is distance to k-th nearest neighbor
+    H(X) â‰ˆ -Ïˆ(k) + Ïˆ(n) + log(c_d) + (d/n) Î£ log(Îµ_i)
+    where Îµ_i is distance to k-th nearest neighbor
     
     Parameters
     ----------
@@ -67,7 +70,7 @@ def knn_entropy(X, k=3):
     # Take k-th neighbor distance (index k, since 0 is self)
     epsilon = distances[:, k]
     
-    # Volume of d-dimensional unit ball: c_d = π^(d/2) / Γ(d/2 + 1)
+    # Volume of d-dimensional unit ball: c_d = Ï€^(d/2) / Î“(d/2 + 1)
     if d == 1:
         c_d = 2.0
     elif d == 2:
@@ -82,7 +85,7 @@ def knn_entropy(X, k=3):
 
 def transfer_entropy_knn(X, Y, lag=1, k=3):
     """
-    Transfer Entropy: TE(X→Y) = H(Y_t | Y_{t-lag}) - H(Y_t | Y_{t-lag}, X_{t-lag})
+    Transfer Entropy: TE(Xâ†’Y) = H(Y_t | Y_{t-lag}) - H(Y_t | Y_{t-lag}, X_{t-lag})
     
     Parameters
     ----------
@@ -109,13 +112,13 @@ def transfer_entropy_knn(X, Y, lag=1, k=3):
     
     n = len(Y_present)
     
-    # H(Y_t | Y_{t-1}) ≈ H(Y_t, Y_{t-1}) - H(Y_{t-1})
+    # H(Y_t | Y_{t-1}) â‰ˆ H(Y_t, Y_{t-1}) - H(Y_{t-1})
     YY = np.hstack([Y_present, Y_past])
     H_YY = knn_entropy(YY, k=k)
     H_Yp = knn_entropy(Y_past, k=k)
     H_Y_given_Yp = H_YY - H_Yp
     
-    # H(Y_t | Y_{t-1}, X_{t-1}) ≈ H(Y_t, Y_{t-1}, X_{t-1}) - H(Y_{t-1}, X_{t-1})
+    # H(Y_t | Y_{t-1}, X_{t-1}) â‰ˆ H(Y_t, Y_{t-1}, X_{t-1}) - H(Y_{t-1}, X_{t-1})
     YYX = np.hstack([Y_present, Y_past, X_past])
     XY  = np.hstack([Y_past, X_past])
     H_YYX = knn_entropy(YYX, k=k)
@@ -128,7 +131,7 @@ def transfer_entropy_knn(X, Y, lag=1, k=3):
 
 def compute_nonparametric_te_matrix(R, k=3, lag=1, threshold_percentile=95):
     """
-    Compute N×N transfer entropy matrix using KNN method
+    Compute NÃ—N transfer entropy matrix using KNN method
     
     Parameters
     ----------
@@ -170,26 +173,7 @@ def compute_nonparametric_te_matrix(R, k=3, lag=1, threshold_percentile=95):
     
     return TE, A_pred
 
-
-def eval_metrics(A_true, A_pred, top_k=5):
-    """Compute precision, recall, F1, hub recovery"""
-    N = A_true.shape[0]
-    mask = ~np.eye(N, dtype=bool).flatten()
-    yt = A_true.flatten()[mask]
-    yp = A_pred.flatten()[mask]
-    
-    true_od = A_true.sum(1)
-    pred_od = A_pred.sum(1)
-    true_h = set(np.argsort(true_od)[-top_k:])
-    pred_h = set(np.argsort(pred_od)[-top_k:])
-    
-    return dict(
-        precision    = precision_score(yt, yp, zero_division=0),
-        recall       = recall_score(yt, yp, zero_division=0),
-        f1           = f1_score(yt, yp, zero_division=0),
-        hub_recovery = len(true_h & pred_h) / top_k,
-        density      = A_pred.sum() / (N * (N-1))
-    )
+# eval_metrics now imported from evaluation.py (unified)
 
 
 def run_nonparametric_comparison():
@@ -217,7 +201,7 @@ def run_nonparametric_comparison():
             seed = SEED_BASE + trial
             
             # Generate data
-            R, A, A_true = generate_sparse_var_extended(
+            R, A, A_true = generate_sparse_var(
                 N=N, T=T, density=0.05, seed=seed, dgp='garch_factor'
             )
             
@@ -262,7 +246,7 @@ def run_nonparametric_comparison():
     df = pd.DataFrame(results)
     OUTPUT.mkdir(exist_ok=True)
     df.to_csv(OUTPUT / 'nonparametric_te_comparison.csv', index=False)
-    print(f"\n✓ Saved: {OUTPUT / 'nonparametric_te_comparison.csv'}")
+    print(f"\nâœ“ Saved: {OUTPUT / 'nonparametric_te_comparison.csv'}")
     
     # Compute summary statistics
     summary = df.groupby(['N', 'T', 'T/N', 'method']).agg({
@@ -275,11 +259,11 @@ def run_nonparametric_comparison():
     
     summary.columns = ['_'.join(col).strip('_') for col in summary.columns.values]
     summary.to_csv(OUTPUT / 'nonparametric_te_summary.csv', index=False)
-    print(f"✓ Saved: {OUTPUT / 'nonparametric_te_summary.csv'}")
+    print(f"âœ“ Saved: {OUTPUT / 'nonparametric_te_summary.csv'}")
     
     # Print key comparisons
     print("\n" + "="*80)
-    print("NONPARAMETRIC TE vs LINEAR TE — PRECISION COMPARISON")
+    print("NONPARAMETRIC TE vs LINEAR TE â€” PRECISION COMPARISON")
     print("="*80)
     
     for (N, T, tn), group in summary.groupby(['N', 'T', 'T/N']):
@@ -289,11 +273,11 @@ def run_nonparametric_comparison():
             method = row['method']
             prec_mean = row['precision_mean']
             prec_std = row['precision_std']
-            print(f"  {method:8s}  Precision: {prec_mean:5.1%} ± {prec_std:5.1%}")
+            print(f"  {method:8s}  Precision: {prec_mean:5.1%} Â± {prec_std:5.1%}")
     
     print("\n" + "="*80)
     print("CONCLUSION:")
-    print("If KNN precision ≈ random at low T/N, nonparametric TE is impractical.")
+    print("If KNN precision â‰ˆ random at low T/N, nonparametric TE is impractical.")
     print("Linear TE (despite being 'wrong' for nonlinear dynamics) is the only")
     print("computationally feasible approach under financial sample constraints.")
     print("="*80)
@@ -314,3 +298,5 @@ if __name__ == '__main__':
     print("\nStarting...\n")
     
     run_nonparametric_comparison()
+
+

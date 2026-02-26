@@ -38,7 +38,7 @@ N_TRIALS  = 8
 def run_oracle_extended():
     print("\n=== Exp #3: Generated Regressor Extended ===")
     print("⚠️  FIXED: Now using GARCH+t5 DGP (consistent with Table 2)")
-    from extended_dgp import generate_sparse_var
+    # generate_sparse_var already imported at top
     
     K = 3
     # Cover wider T/N range: N=50, T in {50,100,250,500} → T/N={1,2,5,10}
